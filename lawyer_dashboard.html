@@ -4,13 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>لوحة المحامي</title>
-  <link rel="stylesheet" href="styles.css" />
   <style>
     body {
       background-color: #121212;
       color: white;
       font-family: Arial, sans-serif;
       text-align: center;
+    }
+
+    .dashboard-container {
+      margin-top: 50px;
+    }
+
+    h2 {
+      color: #00ff99;
+      margin-bottom: 10px;
+    }
+
+    #welcome-msg {
+      font-size: 20px;
+      margin-bottom: 30px;
+      color: #ffcc00;
     }
 
     button {
@@ -36,8 +50,9 @@
 </head>
 <body>
 
-  <div class="dashboard-container" style="margin-top: 50px;">
-    <h2 style="color: #00ff99;">⚖️ لوحة تحكم المحامي</h2>
+  <div class="dashboard-container">
+    <h2>⚖️ لوحة تحكم المحامي</h2>
+    <h3 id="welcome-msg">👋 جاري التحميل...</h3>
 
     <button onclick="window.location.href='add_case.html'">➕ إضافة قضية جديدة</button>
     <button onclick="window.location.href='track_case.html'">🔍 متابعة القضايا القديمة</button>
@@ -46,26 +61,62 @@
     <button onclick="window.location.href='clients.html'">👥 إدارة العملاء</button>
     <button onclick="window.location.href='lawyer_expenses.html'">💵 إدارة المصاريف</button>
 
-    <!-- زر تسجيل الخروج في الأسفل -->
     <div style="margin-top: 40px;">
       <button id="logout-btn">🚪 تسجيل الخروج</button>
     </div>
   </div>
 
-  <script>
-    // التحقق من تسجيل الدخول
-    const currentUser = localStorage.getItem("currentUser");
-    const role = localStorage.getItem("currentUserRole");
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
-    if (!currentUser || role !== "lawyer") {
-      window.location.href = "login.html";
-    }
+    const firebaseConfig = {
+      apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+      authDomain: "lime-4c195.firebaseapp.com",
+      projectId: "lime-4c195",
+      storageBucket: "lime-4c195.firebasestorage.app",
+      messagingSenderId: "253428642396",
+      appId: "1:253428642396:web:e0136755418eaf6534ac99",
+      measurementId: "G-VV32PRPQGX"
+    };
 
-    // تفعيل زر تسجيل الخروج
-    document.getElementById("logout-btn").addEventListener("click", function () {
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("currentUserRole");
-      window.location.href = "login.html";
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const welcomeMsg = document.getElementById("welcome-msg");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+
+        if (userData.role !== "lawyer") {
+          alert("🚫 الوصول مخصص للمحامين فقط");
+          window.location.href = "login.html";
+        } else {
+          welcomeMsg.textContent = `👋 مرحبًا أستاذ ${userData.username || "محامي"}`;
+        }
+      } else {
+        alert("❌ لم يتم العثور على بيانات المستخدم");
+        window.location.href = "login.html";
+      }
+    });
+
+    // زر تسجيل الخروج
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      signOut(auth).then(() => {
+        window.location.href = "login.html";
+      });
     });
   </script>
 </body>
