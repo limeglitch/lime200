@@ -148,6 +148,7 @@
 
       const expense = { title, amount, note, date };
 
+      // إضافة المصاريف في قاعدة البيانات الخاصة بالمحامي
       userExpenseRef.update({
         expenses: firebase.firestore.FieldValue.arrayUnion(expense)
       }).then(() => {
