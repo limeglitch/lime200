@@ -1,28 +1,170 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محرر الوورد</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <title>محرر Word متكامل</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.0.1/docx.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f0f0;
+    }
+
+    .toolbar {
+      background: #e1e1e1;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 1px solid #ccc;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .toolbar button, .toolbar select, .toolbar input[type="color"] {
+      padding: 5px 8px;
+      font-size: 14px;
+    }
+
+    .editor-container {
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .editor {
+      background: white;
+      width: 21cm;
+      min-height: 29.7cm;
+      padding: 40px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      outline: none;
+      direction: rtl;
+    }
+
+    @media print {
+      .toolbar {
+        display: none;
+      }
+      body {
+        background: white;
+      }
+      .editor {
+        box-shadow: none;
+        width: auto;
+        padding: 0;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <h2>📝 مستند وورد</h2>
-        <textarea id="wordEditor" rows="10" placeholder="اكتب هنا..."></textarea>
-        <button onclick="saveAsWord()">💾 حفظ كملف وورد</button>
-        <button onclick="window.location.href='lawyer_dashboard.html'">⬅️ العودة</button>
-    </div>
 
-    <script>
-        function saveAsWord() {
-            let text = document.getElementById("wordEditor").value;
-            let blob = new Blob([text], { type: "application/msword" });
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "document.doc";
-            link.click();
+<div class="toolbar">
+  <button onclick="execCmd('bold')">عريض</button>
+  <button onclick="execCmd('italic')">مائل</button>
+  <button onclick="execCmd('underline')">تحته خط</button>
+  <button onclick="execCmd('insertOrderedList')">قائمة رقمية</button>
+  <button onclick="execCmd('insertUnorderedList')">قائمة نقطية</button>
+  <button onclick="execCmd('justifyRight')">يمين</button>
+  <button onclick="execCmd('justifyCenter')">توسيط</button>
+  <button onclick="execCmd('justifyLeft')">يسار</button>
+  <select onchange="execCmd('fontName', this.value)">
+    <option value="Arial">Arial</option>
+    <option value="Tahoma">Tahoma</option>
+    <option value="Courier New">Courier New</option>
+  </select>
+  <select onchange="execCmd('fontSize', this.value)">
+    <option value="1">صغير جداً</option>
+    <option value="2">صغير</option>
+    <option value="3">عادي</option>
+    <option value="4">كبير</option>
+    <option value="5">أكبر</option>
+    <option value="6">ضخم</option>
+    <option value="7">عملاق</option>
+  </select>
+  <input type="color" onchange="execCmd('foreColor', this.value)">
+  <button onclick="insertImage()">🖼️ إدراج صورة</button>
+  <button onclick="insertTable()">📊 إدراج جدول</button>
+  <button onclick="saveAsWord()">💾 حفظ كـ Word</button>
+  <button onclick="saveAsPDF()">📄 حفظ كـ PDF</button>
+  <button onclick="window.print()">🖨️ طباعة</button>
+</div>
+
+<div class="editor-container">
+  <div class="editor" contenteditable="true" id="editor">
+    ابدأ الكتابة هنا...
+  </div>
+</div>
+
+<script>
+  function execCmd(command, value = null) {
+    document.execCommand(command, false, value);
+  }
+
+  function insertImage() {
+    const url = prompt("أدخل رابط الصورة:");
+    if (url) execCmd('insertImage', url);
+  }
+
+  function insertTable() {
+    const rows = prompt("عدد الصفوف:", 2);
+    const cols = prompt("عدد الأعمدة:", 2);
+    if (rows > 0 && cols > 0) {
+      let table = "<table border='1' style='border-collapse: collapse; width: 100%;'>";
+      for (let i = 0; i < rows; i++) {
+        table += "<tr>";
+        for (let j = 0; j < cols; j++) {
+          table += "<td style='padding: 8px;'>خلية</td>";
         }
-    </script>
+        table += "</tr>";
+      }
+      table += "</table><br>";
+      document.getElementById("editor").focus();
+      document.execCommand("insertHTML", false, table);
+    }
+  }
+
+  async function saveAsWord() {
+    const { Document, Packer, Paragraph } = window.docx;
+
+    const content = document.getElementById("editor").innerText;
+
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          new Paragraph({
+            children: [
+              new docx.TextRun({
+                text: content,
+                font: "Arial",
+              }),
+            ],
+          }),
+        ],
+      }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, "ملف-Word.docx");
+  }
+
+  function saveAsPDF() {
+    const element = document.getElementById("editor");
+    const opt = {
+      margin:       0.5,
+      filename:     'ملف-PDF.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+  }
+</script>
+
 </body>
 </html>
