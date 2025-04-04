@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة تحكم الأدمن</title>
+  <style>
+    body {
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .dashboard-container {
+      max-width: 500px;
+      margin: auto;
+    }
+
+    h2 {
+      color: #00ffc8;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background-color: #1e1e1e;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      margin: 10px 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #333;
+    }
+
+    #custom-buttons {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h2>🔧 لوحة تحكم الأدمن</h2>
+
+    <button onclick="window.location.href='add_user.html'">➕ إنشاء حساب جديد</button>
+    <button onclick="window.location.href='view_users.html'">👤 عرض الحسابات</button>
+    <button onclick="window.location.href='admin_expenses.html'">💼 إدارة المصاريف</button>
+    <button onclick="window.location.href='clients.html'">📁 إدارة العملاء</button>
+
+    <button id="add-button-btn">➕ إضافة زر جديد</button>
+    <div id="custom-buttons"></div>
+
+    <!-- زر إضافة رصيد لمحامي -->
+    <button onclick="window.location.href='add_balance.html'" style="background-color: #00cc88; padding: 10px 20px; border: none; border-radius: 5px; margin: 10px; cursor: pointer;">
+      💰 إضافة رصيد لمحامي
+    </button>
+
+    <button id="logout-btn">🚪 تسجيل الخروج</button>
+  </div>
+
+  <!-- تحميل Firebase 9+ كـ ES Modules -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+    import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+    // إعداد Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+      authDomain: "lime-4c195.firebaseapp.com",
+      projectId: "lime-4c195",
+      storageBucket: "lime-4c195.firebasestorage.app",
+      messagingSenderId: "253428642396",
+      appId: "1:253428642396:web:e0136755418eaf6534ac99",
+      measurementId: "G-VV32PRPQGX"
+    };
+
+    // تهيئة Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // دالة لتسجيل الخروج
+    document.getElementById('logout-btn').addEventListener('click', function () {
+      auth.signOut().then(() => {
+        alert('تم تسجيل الخروج بنجاح');
+        window.location.href = 'login.html'; // قم بتوجيهه إلى صفحة الدخول
+      }).catch((error) => {
+        alert('حدث خطأ أثناء تسجيل الخروج: ' + error.message);
+      });
+    });
+
+    // دالة لإضافة زر مخصص
+    document.getElementById('add-button-btn').addEventListener('click', function () {
+      const newButton = document.createElement('button');
+      newButton.textContent = 'زر مخصص';
+      newButton.style.backgroundColor = '#ff66cc';
+      document.getElementById('custom-buttons').appendChild(newButton);
+    });
+  </script>
+
+</body>
+</html>

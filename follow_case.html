@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>متابعة القضايا القديمة</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      direction: rtl;
+    }
+
+    .case-container {
+      background-color: #1e1e1e;
+      border: 1px solid #444;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      text-align: right;
+    }
+
+    h2 {
+      color: #00ff99;
+    }
+
+    .back-btn {
+      background-color: #444;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      margin-top: 20px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .back-btn:hover {
+      background-color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📁 القضايا المسجلة</h2>
+  <div id="casesList"></div>
+
+  <button class="back-btn" onclick="goBack()">🔙 رجوع</button>
+
+  <script>
+    function goBack() {
+      window.history.back();
+    }
+
+    const casesList = document.getElementById("casesList");
+    const savedCases = JSON.parse(localStorage.getItem("cases")) || [];
+
+    if (savedCases.length === 0) {
+      casesList.innerHTML = "<p>❌ لا توجد قضايا محفوظة حالياً.</p>";
+    } else {
+      savedCases.forEach((caseItem, index) => {
+        const div = document.createElement("div");
+        div.classList.add("case-container");
+
+        div.innerHTML = `
+          <strong>عنوان القضية:</strong> ${caseItem.title}<br>
+          <strong>العميل:</strong> ${caseItem.client}<br>
+          <strong>المحكمة:</strong> ${caseItem.court}<br>
+          <strong>تاريخ الجلسة:</strong> ${caseItem.date}<br>
+          ${caseItem.wordFile ? `<strong>📄 مستند Word:</strong> ${caseItem.wordFile}<br>` : ''}
+          ${caseItem.images.length ? `<strong>📸 الصور:</strong> ${caseItem.images.join(", ")}<br>` : ''}
+        `;
+
+        casesList.appendChild(div);
+      });
+    }
+  </script>
+
+</body>
+</html>

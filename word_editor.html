@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محرر الوورد</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>📝 مستند وورد</h2>
+        <textarea id="wordEditor" rows="10" placeholder="اكتب هنا..."></textarea>
+        <button onclick="saveAsWord()">💾 حفظ كملف وورد</button>
+        <button onclick="window.location.href='lawyer_dashboard.html'">⬅️ العودة</button>
+    </div>
+
+    <script>
+        function saveAsWord() {
+            let text = document.getElementById("wordEditor").value;
+            let blob = new Blob([text], { type: "application/msword" });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "document.doc";
+            link.click();
+        }
+    </script>
+</body>
+</html>

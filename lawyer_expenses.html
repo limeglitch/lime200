@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>💼 مصاريف المحامي</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h2 {
+      color: #00ff99;
+    }
+
+    form {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    input, textarea {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      background: #2e2e2e;
+      color: white;
+      font-size: 16px;
+      border-radius: 5px;
+    }
+
+    button {
+      background: #00ff99;
+      color: #000;
+      font-weight: bold;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #00cc77;
+    }
+
+    .expense-card {
+      background: #1e1e1e;
+      margin: 10px auto;
+      padding: 15px;
+      width: 90%;
+      border-left: 5px solid #00ff99;
+      text-align: right;
+    }
+
+    #logout-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: crimson;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h2 id="user-balance-display">💰 رصيدك المتبقي: جاري التحميل...</h2>
+
+  <h2>📌 إضافة ملاحظة مصروف</h2>
+
+  <form id="expense-form">
+    <input type="text" id="expense-title" placeholder="مثلاً: ورق، بنزين، موصلات" required>
+    <input type="number" id="expense-amount" placeholder="المبلغ بالجنيه" required>
+    <textarea id="expense-note" placeholder="ملاحظات إضافية (اختياري)"></textarea>
+    <button type="submit">➕ أضف الملاحظة</button>
+  </form>
+
+  <h2>📋 سجل المصاريف</h2>
+  <div id="expenses-list"></div>
+
+  <button id="logout-btn">🚪 تسجيل الخروج</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js"></script>
+
+  <script>
+    // إعداد Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+      authDomain: "lime-4c195.firebaseapp.com",
+      projectId: "lime-4c195",
+      storageBucket: "lime-4c195.firebasestorage.app",
+      messagingSenderId: "253428642396",
+      appId: "1:253428642396:web:e0136755418eaf6534ac99",
+      measurementId: "G-VV32PRPQGX"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const username = localStorage.getItem("currentUser");
+
+    if (!username || username === "admin") {
+      window.location.href = "login.html";
+    }
+
+    const userExpenseRef = db.collection("expenses").doc(username);
+
+    function renderExpenses() {
+      userExpenseRef.get().then(doc => {
+        const data = doc.exists ? doc.data().expenses : [];
+        const list = document.getElementById("expenses-list");
+
+        let total = 0;
+        list.innerHTML = data.map(item => {
+          total += parseFloat(item.amount);
+          return `<div class="expense-card">
+            💰 <strong>${item.title}</strong>: ${item.amount} جنيه<br>
+            📝 ${item.note || "لا توجد ملاحظات"}<br>
+            📅 ${item.date}
+          </div>`;
+        }).join("");
+
+        list.innerHTML += `<div style="margin-top:15px"><strong>✅ الإجمالي: ${total} جنيه</strong></div>`;
+
+        // Display the remaining balance
+        const balance = parseFloat(localStorage.getItem(`balance_${username}`)) || 0;
+        const remaining = balance - total;
+
+        document.getElementById("user-balance-display").textContent =
+          `💰 رصيدك المتبقي: ${remaining} جنيه (من إجمالي: ${balance})`;
+      });
+    }
+
+    document.getElementById("expense-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const title = document.getElementById("expense-title").value;
+      const amount = document.getElementById("expense-amount").value;
+      const note = document.getElementById("expense-note").value;
+      const date = new Date().toLocaleString();
+
+      const expense = { title, amount, note, date };
+
+      userExpenseRef.update({
+        expenses: firebase.firestore.FieldValue.arrayUnion(expense)
+      }).then(() => {
+        this.reset();
+        renderExpenses();
+      });
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", function () {
+      localStorage.removeItem("currentUser");
+      window.location.href = "login.html";
+    });
+
+    renderExpenses();
+  </script>
+
+</body>
+</html>

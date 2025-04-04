@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>تعديل القضية</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body style="background-color: #121212; color: white; font-family: Arial, sans-serif; text-align: center;">
+
+  <div class="form-container" style="margin-top: 50px;">
+    <h2 style="color: #00ff99;">🛠️ تعديل بيانات القضية</h2>
+
+    <form id="editCaseForm">
+
+      <label for="caseTitle">عنوان القضية:</label><br>
+      <input type="text" id="caseTitle" name="caseTitle" required><br><br>
+
+      <label for="clientName">اسم العميل:</label><br>
+      <input type="text" id="clientName" name="clientName" required><br><br>
+
+      <label for="court">المحكمة:</label><br>
+      <input type="text" id="court" name="court" required><br><br>
+
+      <label for="date">تاريخ الجلسة:</label><br>
+      <input type="date" id="date" name="date" required><br><br>
+
+      <!-- تعديل المستندات -->
+      <label for="wordFile">📝 مستند Word جديد (اختياري):</label><br>
+      <input type="file" id="wordFile" name="wordFile" accept=".doc,.docx"><br><br>
+
+      <label for="caseImages">📸 صور مستندات جديدة (اختياري):</label><br>
+      <input type="file" id="caseImages" name="caseImages[]" accept="image/*" multiple><br><br>
+
+      <button type="submit" style="background-color: #00ff99; padding: 10px 20px;">💾 حفظ التعديلات</button>
+    </form>
+
+    <br>
+    <button onclick="window.history.back()" style="background-color: #555; color: white;">🔙 رجوع</button>
+  </div>
+
+  <script type="module">
+    // استيراد مكتبات Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
+
+    // إعدادات Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+      authDomain: "lime-4c195.firebaseapp.com",
+      projectId: "lime-4c195",
+      storageBucket: "lime-4c195.firebasestorage.app",
+      messagingSenderId: "253428642396",
+      appId: "1:253428642396:web:e0136755418eaf6534ac99",
+      measurementId: "G-VV32PRPQGX"
+    };
+
+    // تهيئة Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // تحميل بيانات القضية القديمة
+    window.onload = async function () {
+      const caseId = "caseId123"; // استبدل هذا بالمعرف الحقيقي
+      const docRef = doc(db, "cases", caseId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const caseData = docSnap.data();
+        document.getElementById("caseTitle").value = caseData.caseTitle;
+        document.getElementById("clientName").value = caseData.clientName;
+        document.getElementById("court").value = caseData.court;
+        document.getElementById("date").value = caseData.date;
+      } else {
+        console.log("لا توجد بيانات لهذا المعرف");
+      }
+    };
+
+    // حفظ التعديلات
+    document.getElementById("editCaseForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const caseTitle = document.getElementById("caseTitle").value;
+      const clientName = document.getElementById("clientName").value;
+      const court = document.getElementById("court").value;
+      const date = document.getElementById("date").value;
+      const wordFile = document.getElementById("wordFile").files[0];
+      const caseImages = document.getElementById("caseImages").files;
+
+      // تحديث البيانات في Firestore
+      const caseId = "caseId123"; // استبدل هذا بالمعرف الحقيقي
+      const caseRef = doc(db, "cases", caseId);
+      await updateDoc(caseRef, {
+        caseTitle: caseTitle,
+        clientName: clientName,
+        court: court,
+        date: date
+      });
+
+      // رفع مستند Word إذا كان موجودًا
+      if (wordFile) {
+        const wordFileRef = ref(storage, 'case_files/' + wordFile.name);
+        await uploadBytes(wordFileRef, wordFile);
+        alert("تم رفع مستند Word بنجاح");
+      }
+
+      // رفع صور المستندات إذا كانت موجودة
+      for (let i = 0; i < caseImages.length; i++) {
+        const imageFile = caseImages[i];
+        const imageRef = ref(storage, 'case_images/' + imageFile.name);
+        await uploadBytes(imageRef, imageFile);
+        alert("تم رفع صورة المستند بنجاح");
+      }
+
+      alert("✅ تم حفظ التعديلات بنجاح");
+    });
+  </script>
+
+</body>
+</html>

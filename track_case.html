@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>متابعة القضايا القديمة</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    #searchInput {
+      width: 50%;
+    }
+    .case {
+      background-color: #1e1e1e;
+      margin: 10px auto;
+      padding: 15px;
+      width: 60%;
+      border: 1px solid #00ff99;
+      border-radius: 5px;
+      text-align: right;
+    }
+    .delete-btn {
+      background-color: crimson;
+      color: white;
+      float: left;
+      margin-top: 10px;
+    }
+    .edit-btn {
+      background-color: #ffaa00;
+      color: white;
+      float: left;
+      margin-left: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📂 القضايا القديمة</h2>
+
+  <!-- البحث -->
+  <input type="text" id="searchInput" placeholder="🔍 ابحث باسم القضية..." oninput="filterCases()" />
+
+  <!-- عرض القضايا -->
+  <div id="casesContainer"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database.js"></script>
+
+  <script>
+    // إعداد Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+      authDomain: "lime-4c195.firebaseapp.com",
+      projectId: "lime-4c195",
+      storageBucket: "lime-4c195.firebasestorage.app",
+      messagingSenderId: "253428642396",
+      appId: "1:253428642396:web:e0136755418eaf6534ac99",
+      measurementId: "G-VV32PRPQGX"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    let cases = [];
+
+    const casesContainer = document.getElementById("casesContainer");
+
+    // الحصول على القضايا من Firebase
+    function getCasesFromFirebase() {
+      const casesRef = ref(database, 'cases');
+      onValue(casesRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          cases = Object.keys(data).map(key => ({
+            id: key,
+            ...data[key]
+          }));
+        } else {
+          cases = [];
+        }
+        displayCases(cases);
+      });
+    }
+
+    function displayCases(list) {
+      casesContainer.innerHTML = "";
+      if (list.length === 0) {
+        casesContainer.innerHTML = "<p>لا توجد قضايا لعرضها.</p>";
+        return;
+      }
+
+      list.forEach((c, index) => {
+        const caseDiv = document.createElement("div");
+        caseDiv.className = "case";
+        caseDiv.innerHTML = `
+          <strong>📌 الاسم:</strong> ${c.name}<br>
+          <strong>📝 التفاصيل:</strong> ${c.details}<br><br>
+          <button class="edit-btn" onclick="editCase('${c.id}')">✏️ تعديل</button>
+          <button class="delete-btn" onclick="deleteCase('${c.id}')">🗑️ حذف</button>
+        `;
+        casesContainer.appendChild(caseDiv);
+      });
+    }
+
+    function filterCases() {
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = cases.filter(c => c.name.toLowerCase().includes(query));
+      displayCases(filtered);
+    }
+
+    // حذف قضية من Firebase
+    function deleteCase(id) {
+      if (confirm("⚠️ هل أنت متأكد أنك تريد حذف هذه القضية؟")) {
+        const caseRef = ref(database, 'cases/' + id);
+        remove(caseRef)
+          .then(() => {
+            alert("تم حذف القضية بنجاح");
+            getCasesFromFirebase(); // تحديث القضايا بعد الحذف
+          })
+          .catch(error => {
+            console.error("خطأ في حذف القضية:", error);
+          });
+      }
+    }
+
+    // تعديل قضية في Firebase
+    function editCase(id) {
+      const updatedName = prompt("✏️ ادخل الاسم الجديد للقضية:");
+      const updatedDetails = prompt("📝 ادخل التفاصيل الجديدة:");
+
+      if (updatedName && updatedDetails) {
+        const caseRef = ref(database, 'cases/' + id);
+        update(caseRef, {
+          name: updatedName,
+          details: updatedDetails
+        }).then(() => {
+          alert("تم تعديل القضية بنجاح");
+          getCasesFromFirebase(); // تحديث القضايا بعد التعديل
+        }).catch(error => {
+          console.error("خطأ في تعديل القضية:", error);
+        });
+      }
+    }
+
+    // عرض القضايا عند تحميل الصفحة
+    window.onload = function() {
+      getCasesFromFirebase();
+    };
+  </script>
+
+</body>
+</html>

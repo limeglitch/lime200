@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>📝 رفع وتعديل مستند Word</title>
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.1.0/docx.umd.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="background-color: #121212; color: white; font-family: Arial, sans-serif; text-align: center;">
+
+  <h2 style="margin-top: 50px;">📝 رفع وتعديل مستند Word</h2>
+
+  <input type="file" id="upload" accept=".docx" />
+  <br><br>
+
+  <div style="margin: auto; width: 80%; text-align: right;">
+    <textarea id="editor" rows="20" style="width: 100%; background-color: white; color: black; padding: 10px;"></textarea>
+  </div>
+
+  <br>
+  <button onclick="saveDoc()">💾 حفظ كـ Word</button>
+  <button onclick="window.location.href='lawyer_dashboard.html'">⬅️ رجوع</button>
+
+  <script>
+    document.getElementById("upload").addEventListener("change", function(event) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const arrayBuffer = reader.result;
+        mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+          .then(function(result) {
+            document.getElementById("editor").value = result.value;
+          });
+      };
+      reader.readAsArrayBuffer(event.target.files[0]);
+    });
+
+    function saveDoc() {
+      const text = document.getElementById("editor").value;
+      const doc = new docx.Document({
+        sections: [{
+          properties: {},
+          children: [new docx.Paragraph(text)]
+        }]
+      });
+
+      docx.Packer.toBlob(doc).then(blob => {
+        saveAs(blob, "تم_تعديله.docx");
+      });
+    }
+  </script>
+
+</body>
+</html>

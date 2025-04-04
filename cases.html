@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📄 القضايا</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- استيراد Firebase -->
+    <script type="module">
+        // استيراد Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+        // بيانات التهيئة الخاصة بـ Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+            authDomain: "lime-4c195.firebaseapp.com",
+            projectId: "lime-4c195",
+            storageBucket: "lime-4c195.firebasestorage.app",
+            messagingSenderId: "253428642396",
+            appId: "1:253428642396:web:e0136755418eaf6534ac99",
+            measurementId: "G-VV32PRPQGX"
+        };
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // تحميل القضايا عند فتح الصفحة
+        document.addEventListener("DOMContentLoaded", async () => {
+            const casesBody = document.getElementById("casesBody");
+            casesBody.innerHTML = ""; // تفريغ الجدول قبل إعادة تحميل البيانات
+
+            // جلب القضايا من Firestore
+            const querySnapshot = await getDocs(collection(db, "cases"));
+            
+            if (querySnapshot.empty) {
+                casesBody.innerHTML = "<tr><td colspan='5'>🚫 لا توجد قضايا مسجلة.</td></tr>";
+                return;
+            }
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const row = `
+                    <tr>
+                        <td>${data.caseNumber}</td>
+                        <td>${data.clientName}</td>
+                        <td>${data.courtName}</td>
+                        <td>${data.lawyerName}</td>
+                        <td>${data.caseStatus}</td>
+                    </tr>
+                `;
+                casesBody.innerHTML += row;
+            });
+        });
+
+        // دالة لإضافة قضية جديدة
+        window.addCase = async function () {
+            const caseNumber = document.getElementById("caseNumber").value;
+            const clientName = document.getElementById("clientName").value;
+            const courtName = document.getElementById("courtName").value;
+            const lawyerName = document.getElementById("lawyerName").value;
+            const caseStatus = document.getElementById("caseStatus").value;
+
+            if (!caseNumber || !clientName || !courtName || !lawyerName) {
+                alert("⚠️ الرجاء إدخال جميع البيانات المطلوبة!");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "cases"), {
+                    caseNumber,
+                    clientName,
+                    courtName,
+                    lawyerName,
+                    caseStatus
+                });
+
+                alert("✅ تم إضافة القضية بنجاح!");
+                location.reload(); // إعادة تحميل الصفحة لعرض البيانات المحدثة
+            } catch (error) {
+                console.error("❌ حدث خطأ أثناء الإضافة:", error);
+            }
+        };
+    </script>
+</head>
+<body>
+
+    <div class="header">
+        <div class="office-name">📌 مكتب محمد منطاوي</div>
+        <div class="developer">🚀 تطوير Lime Glitch</div>
+    </div>
+
+    <div class="container">
+        <h2>📄 قائمة القضايا</h2>
+
+        <button onclick="document.getElementById('caseForm').style.display='block'">➕ إضافة قضية جديدة</button>
+        <button onclick="window.location.href='old_cases.html'">📂 متابعة القضايا القديمة</button>
+
+        <table class="cases-table">
+            <thead>
+                <tr>
+                    <th>رقم القضية</th>
+                    <th>الموكل</th>
+                    <th>المحكمة</th>
+                    <th>المحامي المسؤول</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody id="casesBody">
+                <!-- سيتم تحميل القضايا هنا -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- نافذة إدخال بيانات القضية -->
+    <div id="caseForm" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>➕ إضافة قضية جديدة</h2>
+            <input type="text" id="caseNumber" placeholder="رقم القضية" required>
+            <input type="text" id="clientName" placeholder="اسم الموكل" required>
+            <input type="text" id="courtName" placeholder="المحكمة" required>
+            <input type="text" id="lawyerName" placeholder="المحامي المسؤول" required>
+            <select id="caseStatus">
+                <option value="متداولة">متداولة</option>
+                <option value="مغلقة">مغلقة</option>
+                <option value="جلسة قادمة">جلسة قادمة</option>
+            </select>
+            <button onclick="addCase()">✅ حفظ القضية</button>
+            <button onclick="document.getElementById('caseForm').style.display='none'">❌ إلغاء</button>
+        </div>
+    </div>
+
+</body>
+</html>

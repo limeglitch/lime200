@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>لوحة المحامي</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    button {
+      background-color: #00ff99;
+      color: black;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      margin: 10px 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #00cc77;
+    }
+
+    #logout-btn {
+      background-color: crimson;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container" style="margin-top: 50px;">
+    <h2 style="color: #00ff99;">⚖️ لوحة تحكم المحامي</h2>
+
+    <button onclick="window.location.href='add_case.html'">➕ إضافة قضية جديدة</button>
+    <button onclick="window.location.href='track_case.html'">🔍 متابعة القضايا القديمة</button>
+    <button onclick="window.location.href='word_editor.html'">📝 محرر Word</button>
+    <button onclick="window.location.href='upload_photos.html'">📸 تصوير ورفع أوراق</button>
+    <button onclick="window.location.href='clients.html'">👥 إدارة العملاء</button>
+    <button onclick="window.location.href='lawyer_expenses.html'">💵 إدارة المصاريف</button>
+
+    <!-- زر تسجيل الخروج في الأسفل -->
+    <div style="margin-top: 40px;">
+      <button id="logout-btn">🚪 تسجيل الخروج</button>
+    </div>
+  </div>
+
+  <script>
+    // التحقق من تسجيل الدخول
+    const currentUser = localStorage.getItem("currentUser");
+    const role = localStorage.getItem("currentUserRole");
+
+    if (!currentUser || role !== "lawyer") {
+      window.location.href = "login.html";
+    }
+
+    // تفعيل زر تسجيل الخروج
+    document.getElementById("logout-btn").addEventListener("click", function () {
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("currentUserRole");
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>

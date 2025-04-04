@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام المحاماة</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>نظام المحاماة</h2>
+        <div class="grid">
+            <a href="dashboard.html" class="card">إدارة المستخدمين</a>
+            <a href="expenses.html" class="card">تسجيل المصاريف</a>
+            <a href="clients.html" class="card">إدارة العملاء</a>
+            <a href="salaries.html" class="card">المرتبات والخصومات</a>
+        </div>
+        <button id="logout-btn">تسجيل الخروج</button>
+    </div>
+
+    <!-- إضافة روابط Firebase -->
+    <script type="module">
+        // استيراد الدوال التي تحتاجها من SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-analytics.js";
+
+        // تكوين Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+            authDomain: "lime-4c195.firebaseapp.com",
+            projectId: "lime-4c195",
+            storageBucket: "lime-4c195.firebasestorage.app",
+            messagingSenderId: "253428642396",
+            appId: "1:253428642396:web:e0136755418eaf6534ac99",
+            measurementId: "G-VV32PRPQGX"
+        };
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+
+        // زر تسجيل الخروج
+        document.getElementById('logout-btn').addEventListener('click', function () {
+            // إضافة وظيفة تسجيل الخروج
+            alert("تم تسجيل الخروج بنجاح");
+            window.location.href = "login.html"; // إعادة توجيه المستخدم إلى صفحة تسجيل الدخول
+        });
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>

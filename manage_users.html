@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المستخدمين</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>إدارة المستخدمين</h2>
+        <input type="text" id="new-username" placeholder="اسم المستخدم الجديد">
+        <input type="password" id="new-password" placeholder="كلمة المرور">
+        <select id="user-role">
+            <option value="lawyer">محامي</option>
+            <option value="admin">أدمن</option>
+        </select>
+        <button id="add-user-btn">إضافة مستخدم</button>
+
+        <h3>قائمة المستخدمين</h3>
+        <ul id="user-list"></ul>
+
+        <button id="logout-btn">تسجيل الخروج</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

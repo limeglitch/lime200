@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>مرحبًا، <span id="username-display"></span>!</h2>
+        <button onclick="logout()">تسجيل الخروج</button>
+
+        <h3>إضافة مستخدم جديد</h3>
+        <input type="text" id="new-username" placeholder="اسم المستخدم">
+        <input type="password" id="new-password" placeholder="كلمة المرور">
+        <button onclick="addUser()">إضافة</button>
+        
+        <h3>قائمة المستخدمين</h3>
+        <ul id="user-list"></ul>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <script>
+        // إعداد Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+            authDomain: "lime-4c195.firebaseapp.com",
+            projectId: "lime-4c195",
+            storageBucket: "lime-4c195.firebasestorage.app",
+            messagingSenderId: "253428642396",
+            appId: "1:253428642396:web:e0136755418eaf6534ac99",
+            measurementId: "G-VV32PRPQGX"
+        };
+
+        // تهيئة التطبيق
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // عرض اسم المستخدم
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('username-display').textContent = user.displayName || user.email;
+                fetchUsers();
+            } else {
+                window.location.href = 'login.html'; // إعادة توجيه لتسجيل الدخول إذا لم يكن هناك مستخدم مسجل الدخول
+            }
+        });
+
+        // تسجيل الخروج
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.href = 'login.html'; // إعادة التوجيه لتسجيل الدخول
+            }).catch((error) => {
+                console.error(error);
+            });
+        }
+
+        // إضافة مستخدم جديد
+        function addUser() {
+            const username = document.getElementById('new-username').value;
+            const password = document.getElementById('new-password').value;
+
+            if (username && password) {
+                auth.createUserWithEmailAndPassword(username, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        db.collection("users").add({
+                            username: username,
+                            userId: user.uid
+                        }).then(() => {
+                            alert("تم إضافة المستخدم بنجاح!");
+                            fetchUsers(); // تحديث قائمة المستخدمين
+                        }).catch(error => {
+                            console.error(error);
+                        });
+                    })
+                    .catch((error) => {
+                        console.error(error.message);
+                    });
+            } else {
+                alert("الرجاء إدخال اسم المستخدم وكلمة المرور.");
+            }
+        }
+
+        // جلب قائمة المستخدمين من Firestore
+        function fetchUsers() {
+            db.collection("users").get().then((querySnapshot) => {
+                const userList = document.getElementById("user-list");
+                userList.innerHTML = ""; // مسح القائمة السابقة
+                querySnapshot.forEach((doc) => {
+                    const user = doc.data();
+                    const li = document.createElement("li");
+                    li.textContent = `اسم المستخدم: ${user.username}`;
+                    userList.appendChild(li);
+                });
+            }).catch(error => {
+                console.error("خطأ في جلب البيانات: ", error);
+            });
+        }
+    </script>
+</body>
+</html>

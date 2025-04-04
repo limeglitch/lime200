@@ -1,0 +1,57 @@
+<?php
+// التأكد من أن الطلب من نوع POST
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $caseTitle = $_POST['caseTitle'] ?? '';
+    $clientName = $_POST['clientName'] ?? '';
+    $court = $_POST['court'] ?? '';
+    $date = $_POST['date'] ?? '';
+
+    // إنشاء مجلد للحفظ إذا لم يكن موجود
+    $uploadDir = "uploads/";
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    // حفظ ملف الـ Word (اختياري)
+    $wordPath = '';
+    if (isset($_FILES['wordFile']) && $_FILES['wordFile']['error'] == 0) {
+        $wordName = basename($_FILES['wordFile']['name']);
+        $wordPath = $uploadDir . time() . "_" . $wordName;
+        move_uploaded_file($_FILES['wordFile']['tmp_name'], $wordPath);
+    }
+
+    // حفظ الصور (متعددة)
+    $imagePaths = [];
+    if (!empty($_FILES['caseImages']['name'][0])) {
+        foreach ($_FILES['caseImages']['tmp_name'] as $key => $tmpName) {
+            $imageName = basename($_FILES['caseImages']['name'][$key]);
+            $targetPath = $uploadDir . time() . "_" . $imageName;
+            move_uploaded_file($tmpName, $targetPath);
+            $imagePaths[] = $targetPath;
+        }
+    }
+
+    echo "<body style='background-color: #121212; color: white; font-family: Arial; text-align: center; margin-top: 40px'>";
+    echo "<h2 style='color: #00ff99;'>✅ تم حفظ القضية بنجاح</h2>";
+    echo "<p><strong>عنوان:</strong> $caseTitle</p>";
+    echo "<p><strong>العميل:</strong> $clientName</p>";
+    echo "<p><strong>المحكمة:</strong> $court</p>";
+    echo "<p><strong>تاريخ الجلسة:</strong> $date</p>";
+
+    if ($wordPath != '') {
+        echo "<p>📄 مستند Word تم رفعه: <a href='$wordPath' style='color: #00ff99;'>عرض / تحميل</a></p>";
+    }
+
+    if (count($imagePaths) > 0) {
+        echo "<p>🖼️ الصور المرفوعة:</p>";
+        foreach ($imagePaths as $path) {
+            echo "<img src='$path' alt='صورة مستند' style='width: 200px; margin: 5px; border: 1px solid #444;'><br>";
+        }
+    }
+
+    echo "<br><a href='add_case.html' style='color: #00ff99;'>🔙 الرجوع لإضافة قضية جديدة</a>";
+    echo "</body>";
+} else {
+    echo "<h3 style='color:red;'>❌ لا يمكن الوصول للصفحة مباشرة.</h3>";
+}
+?>

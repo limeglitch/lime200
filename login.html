@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - محمد منطاوي</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #2d2d2d;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+        }
+
+        .header {
+            color: #00ff99;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input {
+            padding: 15px;
+            margin: 15px 0;
+            width: 100%;
+            background-color: #333;
+            border: 1px solid #444;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #00ff99;
+            border: none;
+            border-radius: 10px;
+            color: black;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #00cc7a;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .footer a {
+            color: #00ff99;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .support {
+            font-size: 14px;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        .support a {
+            color: #00ff99;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="header">تسجيل الدخول - محمد منطاوي</h2>
+        <form id="login-form" class="form-container">
+            <input type="email" id="email" placeholder="البريد الإلكتروني" required />
+            <input type="password" id="password" placeholder="كلمة المرور" required />
+            <button type="submit">تسجيل الدخول</button>
+        </form>
+
+        <div class="footer">
+            <p>ليس لديك حساب؟ <a href="signup.html" id="signup-link">أنشئ حسابًا الآن</a></p>
+        </div>
+
+        <div class="support">
+            <p>لأي استفسارات، <a href="mailto:support@lawfirm.com">تواصل مع الدعم</a></p>
+        </div>
+    </div>
+
+    <!-- تحميل Firebase SDK 9+ -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+            authDomain: "lime-4c195.firebaseapp.com",
+            projectId: "lime-4c195",
+            storageBucket: "lime-4c195.firebasestorage.app",
+            messagingSenderId: "253428642396",
+            appId: "1:253428642396:web:e0136755418eaf6534ac99",
+            measurementId: "G-VV32PRPQGX"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // دالة تسجيل الدخول
+        document.getElementById('login-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // جلب بيانات المستخدم من Firestore
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    
+                    // توجيه المستخدم بناءً على الدور
+                    if (userData.role === 'lawyer') {
+                        window.location.href = 'lawyer_dashboard.html'; // صفحة المحامي
+                    } else {
+                        // في حال كان الدور غير محامي، يمكن توجيه المستخدم لصفحة أخرى أو إعطاء رسالة خطأ
+                        alert('لا يمكنك الدخول لأنك لست محامي.');
+                    }
+                } else {
+                    alert('❌ لم يتم العثور على بيانات المستخدم في النظام.');
+                }
+            } catch (error) {
+                console.error('خطأ في تسجيل الدخول: ', error);
+                alert('❌ خطأ في تسجيل الدخول');
+            }
+        });
+    </script>
+
+</body>
+</html>

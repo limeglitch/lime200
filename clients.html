@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة العملاء</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- استيراد Firebase -->
+    <script type="module">
+        // استيراد Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+
+        // بيانات التهيئة الخاصة بـ Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+            authDomain: "lime-4c195.firebaseapp.com",
+            projectId: "lime-4c195",
+            storageBucket: "lime-4c195.appspot.com",
+            messagingSenderId: "253428642396",
+            appId: "1:253428642396:web:e0136755418eaf6534ac99",
+            measurementId: "G-VV32PRPQGX"
+        };
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // تحميل العملاء عند فتح الصفحة
+        document.addEventListener("DOMContentLoaded", async () => {
+            const clientsList = document.getElementById("clients-list");
+            clientsList.innerHTML = ""; // تفريغ القائمة قبل تحميل البيانات
+
+            // جلب العملاء من Firestore
+            const querySnapshot = await getDocs(collection(db, "clients"));
+
+            if (querySnapshot.empty) {
+                clientsList.innerHTML = "<li>🚫 لا يوجد عملاء مسجلين حاليًا.</li>";
+                return;
+            }
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const listItem = document.createElement("li");
+                listItem.innerHTML = `📁 ${data.name} - <a href="${data.fileUrl}" target="_blank">📄 عرض المستند</a>`;
+                clientsList.appendChild(listItem);
+            });
+        });
+
+        // دالة لإضافة عميل جديد
+        document.getElementById("add-client-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const clientName = document.getElementById("client-name").value;
+            const clientDoc = document.getElementById("client-doc").files[0];
+
+            if (!clientName || !clientDoc) {
+                alert("⚠️ الرجاء إدخال اسم العميل واختيار ملف!");
+                return;
+            }
+
+            try {
+                // رفع الملف إلى Firebase Storage
+                const storageRef = ref(storage, `clients/${clientDoc.name}`);
+                await uploadBytes(storageRef, clientDoc);
+                const fileUrl = await getDownloadURL(storageRef);
+
+                // حفظ بيانات العميل في Firestore
+                await addDoc(collection(db, "clients"), {
+                    name: clientName,
+                    fileUrl: fileUrl
+                });
+
+                alert("✅ تم إضافة العميل بنجاح!");
+                location.reload(); // إعادة تحميل الصفحة لعرض العميل الجديد
+            } catch (error) {
+                console.error("❌ حدث خطأ أثناء الإضافة:", error);
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="clients-container">
+        <h2>📁 إدارة العملاء</h2>
+        <form id="add-client-form">
+            <input type="text" id="client-name" placeholder="اسم العميل" required>
+            <input type="file" id="client-doc" accept=".pdf, .doc, .docx" required>
+            <button type="submit">➕ إضافة العميل</button>
+        </form>
+        <ul id="clients-list"></ul>
+        <button onclick="window.location.href='admin_dashboard.html'">🔙 العودة</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📂 متابعة القضايا القديمة</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="header">
+        <div class="office-name">📌 مكتب محمد منطاوي</div>
+        <div class="developer">🚀 تطوير Lime Glitch</div>
+    </div>
+
+    <div class="container">
+        <h2>📂 القضايا القديمة</h2>
+        <ul id="old-cases-list">
+            <!-- القضايا ستتم إضافتها هنا -->
+        </ul>
+    </div>
+
+    <!-- إضافة Firebase SDK (نسخة حديثة v9+) باستخدام type="module" -->
+    <script type="module">
+        // استيراد Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+
+        // تكوين Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+            authDomain: "lime-4c195.firebaseapp.com",
+            projectId: "lime-4c195",
+            storageBucket: "lime-4c195.firebasestorage.app",
+            messagingSenderId: "253428642396",
+            appId: "1:253428642396:web:e0136755418eaf6534ac99",
+            measurementId: "G-VV32PRPQGX"
+        };
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // دالة لتحميل القضايا من Firebase Firestore
+        async function loadCases() {
+            const querySnapshot = await getDocs(collection(db, "old_cases"));
+            const caseList = document.getElementById("old-cases-list");
+            querySnapshot.forEach((doc) => {
+                const caseData = doc.data();
+                const li = document.createElement("li");
+                li.textContent = `⚖️ قضية رقم ${caseData.caseNumber} - ${caseData.caseStatus} بتاريخ ${caseData.caseDate}`;
+                caseList.appendChild(li);
+            });
+        }
+
+        // تحميل القضايا عند فتح الصفحة
+        loadCases();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض الحسابات</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .users-container {
+            max-width: 800px;
+            margin: auto;
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px;
+            background-color: #333;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        button {
+            background-color: #00ff99;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #00cc7a;
+        }
+
+        .delete-btn {
+            background-color: #ff3b3b;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background-color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="users-container">
+        <h2>👤 قائمة الحسابات</h2>
+        <ul id="users-list"></ul>
+        <button onclick="window.location.href='admin_dashboard.html'">🔙 العودة إلى لوحة التحكم</button>
+    </div>
+
+    <!-- تحميل Firebase SDK 9+ -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, doc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+        // إعداد Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
+            authDomain: "lime-4c195.firebaseapp.com",
+            projectId: "lime-4c195",
+            storageBucket: "lime-4c195.firebasestorage.app",
+            messagingSenderId: "253428642396",
+            appId: "1:253428642396:web:e0136755418eaf6534ac99",
+            measurementId: "G-VV32PRPQGX"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // دالة لعرض المستخدمين
+        async function loadUsers() {
+            const usersList = document.getElementById("users-list");
+
+            try {
+                // الحصول على جميع المستخدمين من مجموعة 'users' في Firestore
+                const querySnapshot = await getDocs(collection(db, "users"));
+                if (querySnapshot.empty) {
+                    usersList.innerHTML = "<p>❌ لا يوجد مستخدمين!</p>";
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const user = doc.data();
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        👤 ${user.username} - ${user.role} - ${user.email}
+                        <button class="delete-btn" onclick="deleteUser('${doc.id}')">حذف</button>
+                    `;
+                    usersList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('خطأ في تحميل المستخدمين: ', error);
+                usersList.innerHTML = "<p>❌ حدث خطأ أثناء تحميل المستخدمين</p>";
+            }
+        }
+
+        // دالة لحذف مستخدم من Firestore
+        async function deleteUser(userId) {
+            const userRef = doc(db, "users", userId);
+            
+            try {
+                // حذف المستخدم من Firestore
+                await deleteDoc(userRef);
+                alert('✅ تم حذف المستخدم بنجاح');
+                // إعادة تحميل المستخدمين بعد الحذف
+                loadUsers();
+            } catch (error) {
+                console.error('خطأ في حذف المستخدم: ', error);
+                alert('❌ حدث خطأ أثناء حذف المستخدم');
+            }
+        }
+
+        // تحميل المستخدمين عند تحميل الصفحة
+        document.addEventListener("DOMContentLoaded", loadUsers);
+    </script>
+</body>
+</html>
