@@ -1,18 +1,101 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>تحويل صورة إلى نص</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.4/dist/tesseract.min.js"></script>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
 
-  <!-- إضافة مكتبات Firebase -->
+    h2 {
+      color: #00ff99;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      background-color: #2d2d2d;
+      color: white;
+      border: 1px solid #444;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: #00ff99;
+      color: black;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background-color: #00cc7a;
+    }
+
+    #progressBarContainer {
+      width: 80%;
+      height: 20px;
+      background-color: #333;
+      border-radius: 10px;
+      margin: 20px auto;
+      display: none;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background-color: #ffcc00;
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
+
+    #timer {
+      color: #aaa;
+      margin-top: 10px;
+      display: none;
+    }
+
+    textarea {
+      width: 80%;
+      height: 200px;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 16px;
+      border-radius: 10px;
+      background-color: #2d2d2d;
+      color: #fff;
+      border: 1px solid #555;
+      resize: vertical;
+    }
+
+    .back-btn {
+      background-color: #444;
+      color: #eee;
+      margin-top: 20px;
+    }
+
+    .back-btn:hover {
+      background-color: #666;
+    }
+  </style>
+
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
     import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-storage.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js";
 
-    // تكوين Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
       authDomain: "lime-4c195.firebaseapp.com",
@@ -23,27 +106,23 @@
       measurementId: "G-VV32PRPQGX"
     };
 
-    // تهيئة Firebase
     const app = initializeApp(firebaseConfig);
     const storage = getStorage(app);
     const db = getFirestore(app);
 
     let intervalId;
 
-    // دالة رفع الصورة إلى Firebase Storage
     function uploadImage(file) {
       return new Promise((resolve, reject) => {
         const storageRef = ref(storage, 'images/' + file.name);
         const uploadTask = uploadBytesResumable(storageRef, file);
 
         uploadTask.on('state_changed', (snapshot) => {
-          // هنا يمكنك إضافة شريط تقدم لرفع الصورة
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           document.getElementById('progressBar').style.width = progress + "%";
         }, (error) => {
           reject(error);
         }, () => {
-          // بعد رفع الصورة بنجاح نحصل على رابط الصورة
           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
             resolve(downloadURL);
           });
@@ -51,7 +130,6 @@
       });
     }
 
-    // دالة حفظ النص في Firestore
     function storeExtractedText(text, imageUrl) {
       const docRef = doc(db, "extractedText", Date.now().toString());
       setDoc(docRef, {
@@ -59,14 +137,13 @@
         imageUrl: imageUrl,
         timestamp: new Date(),
       }).then(() => {
-        console.log("تم تخزين النص في Firestore بنجاح!");
+        console.log("✅ تم تخزين النص في Firestore بنجاح");
       }).catch((error) => {
-        console.error("حدث خطأ أثناء تخزين النص:", error);
+        console.error("❌ حدث خطأ أثناء التخزين:", error);
       });
     }
 
-    // دالة لتحويل الصورة إلى نص باستخدام Tesseract
-    function convertImageToText() {
+    window.convertImageToText = function () {
       const imageInput = document.getElementById('imageInput');
       const output = document.getElementById('outputText');
       const progressBarContainer = document.getElementById('progressBarContainer');
@@ -74,7 +151,7 @@
       const timer = document.getElementById('timer');
 
       if (imageInput.files.length === 0) {
-        alert("الرجاء اختيار صورة أولاً 📷");
+        alert("📸 الرجاء اختيار صورة أولاً");
         return;
       }
 
@@ -85,9 +162,7 @@
       progressBar.style.width = '0%';
       startTimer();
 
-      // رفع الصورة أولاً
       uploadImage(file).then((imageUrl) => {
-        // تحويل الصورة إلى نص بعد رفعها
         Tesseract.recognize(
           file,
           'ara+eng',
@@ -105,20 +180,18 @@
           progressBar.style.width = "100%";
           output.value = text.trim() || "❌ لم يتم استخراج أي نص.";
 
-          // تخزين النص في Firestore
           storeExtractedText(text.trim(), imageUrl);
         }).catch((err) => {
           clearInterval(intervalId);
           console.error(err);
-          output.value = "حدث خطأ أثناء التحويل 😥";
+          output.value = "❌ حدث خطأ أثناء التحويل";
           timer.textContent = "❌ فشل التحويل";
         });
       }).catch((error) => {
-        console.error("حدث خطأ أثناء رفع الصورة:", error);
+        console.error("❌ خطأ في رفع الصورة:", error);
       });
     }
 
-    // دالة لتحديث المؤقت
     function startTimer() {
       const timer = document.getElementById('timer');
       let seconds = 0;
@@ -130,30 +203,26 @@
       }, 1000);
     }
   </script>
-
 </head>
 <body>
 
-  <h2 style="color: #00ff99;">🖼️ تحويل صورة إلى نص</h2>
+  <h2>🖼️ تحويل صورة إلى نص</h2>
 
   <input type="file" id="imageInput" accept="image/*"><br><br>
 
-  <button onclick="convertImageToText()" style="background-color: #00ff99; padding: 10px 20px;">🔄 تحويل</button>
+  <button onclick="convertImageToText()">🔄 تحويل</button>
 
-  <!-- Progress bar -->
   <div id="progressBarContainer">
     <div id="progressBar"></div>
   </div>
 
-  <!-- Timer -->
   <div id="timer">⏳ جاري المعالجة...</div>
 
-  <!-- Editable Text Area -->
   <h3 style="margin-top: 30px;">📄 النص المستخرج (يمكنك التعديل):</h3>
   <textarea id="outputText" placeholder="النص المستخرج سيظهر هنا..."></textarea>
 
   <br>
-  <button onclick="window.history.back()" style="background-color: #555; color: white;">🔙 رجوع</button>
+  <button onclick="window.history.back()" class="back-btn">🔙 رجوع</button>
 
 </body>
 </html>
