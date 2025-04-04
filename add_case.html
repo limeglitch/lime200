@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>إضافة قضية</title>
-  <!-- إضافة Firebase SDK النسخة 8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -77,7 +76,6 @@
   </div>
 
   <script>
-    // إعداد Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
         authDomain: "lime-4c195.firebaseapp.com",
@@ -88,12 +86,11 @@
         measurementId: "G-VV32PRPQGX"
     };
 
-    // تهيئة Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-    document.getElementById("caseForm").addEventListener("submit", function(e) {
+    document.getElementById("caseForm").addEventListener("submit", async function(e) {
       e.preventDefault();
 
       const caseTitle = document.getElementById("caseTitle").value;
@@ -103,59 +100,42 @@
       const wordFile = document.getElementById("wordFile").files[0];
       const caseImages = document.getElementById("caseImages").files;
 
-      // رفع الملفات إلى Firebase Storage
       const caseData = {
         title: caseTitle,
         client: clientName,
         court: court,
         date: date,
         wordFileUrl: null,
-        imageUrls: []
+        imageUrls: [],
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
       };
 
       const caseRef = db.collection("cases").doc();
 
-      // رفع مستند Word إذا كان موجود
-      if (wordFile) {
-        const wordFileRef = storage.ref().child('cases/' + wordFile.name);
-        wordFileRef.put(wordFile).then((snapshot) => {
-          wordFileRef.getDownloadURL().then((url) => {
-            caseData.wordFileUrl = url;
-            saveCaseData(caseData, caseRef);
-          });
-        });
-      } else {
-        saveCaseData(caseData, caseRef);
-      }
+      try {
+        if (wordFile) {
+          const wordFileRef = storage.ref().child(`cases/${Date.now()}_${wordFile.name}`);
+          const wordSnapshot = await wordFileRef.put(wordFile);
+          caseData.wordFileUrl = await wordSnapshot.ref.getDownloadURL();
+        }
 
-      // رفع الصور إذا كانت موجودة
-      if (caseImages.length > 0) {
-        Array.from(caseImages).forEach((imageFile) => {
-          const imageRef = storage.ref().child('cases/images/' + imageFile.name);
-          imageRef.put(imageFile).then((snapshot) => {
-            imageRef.getDownloadURL().then((url) => {
-              caseData.imageUrls.push(url);
-              if (caseData.imageUrls.length === caseImages.length) {
-                saveCaseData(caseData, caseRef);
-              }
-            });
-          });
+        const imageUploadPromises = Array.from(caseImages).map(async (imageFile) => {
+          const imageRef = storage.ref().child(`cases/images/${Date.now()}_${imageFile.name}`);
+          const imageSnapshot = await imageRef.put(imageFile);
+          return await imageSnapshot.ref.getDownloadURL();
         });
-      } else {
-        saveCaseData(caseData, caseRef);
-      }
-    });
 
-    function saveCaseData(caseData, caseRef) {
-      // حفظ البيانات في Firestore
-      caseRef.set(caseData).then(() => {
+        caseData.imageUrls = await Promise.all(imageUploadPromises);
+        
+        await caseRef.set(caseData);
+        
         alert("✅ تم حفظ القضية بنجاح!");
         window.location.href = "track_case.html";
-      }).catch((error) => {
-        console.error("خطأ أثناء حفظ القضية:", error);
+      } catch (error) {
+        console.error("❌ خطأ أثناء حفظ القضية:", error);
         alert("❌ حدث خطأ أثناء حفظ القضية.");
-      });
-    }
+      }
+    });
 
     function goBack() {
       window.history.back();
