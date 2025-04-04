@@ -5,13 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة العملاء</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- استيراد Firebase -->
+    <style>
+        #progress-container {
+            display: none;
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        #progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #00cc66;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+        import { getFirestore, collection, getDocs, addDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
-        // بيانات Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
             authDomain: "lime-4c195.firebaseapp.com",
@@ -22,19 +38,18 @@
             measurementId: "G-VV32PRPQGX"
         };
 
-        // تهيئة Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // تحميل العملاء عند فتح الصفحة
         async function loadClients() {
             const clientsList = document.getElementById("clients-list");
             clientsList.innerHTML = "<li>⏳ جاري تحميل العملاء...</li>";
 
             try {
-                const querySnapshot = await getDocs(collection(db, "clients"));
-                clientsList.innerHTML = ""; // تفريغ القائمة بعد تحميل البيانات
+                const q = query(collection(db, "clients"), orderBy("timestamp", "desc"));
+                const querySnapshot = await getDocs(q);
+                clientsList.innerHTML = "";
 
                 if (querySnapshot.empty) {
                     clientsList.innerHTML = "<li>🚫 لا يوجد عملاء مسجلين.</li>";
@@ -55,11 +70,12 @@
 
         document.addEventListener("DOMContentLoaded", loadClients);
 
-        // دالة لإضافة عميل جديد
         async function addClient(event) {
             event.preventDefault();
             const clientName = document.getElementById("client-name").value;
             const clientDoc = document.getElementById("client-doc").files[0];
+            const progressBarContainer = document.getElementById("progress-container");
+            const progressBar = document.getElementById("progress-bar");
 
             if (!clientName || !clientDoc) {
                 alert("⚠️ الرجاء إدخال اسم العميل واختيار ملف!");
@@ -67,31 +83,44 @@
             }
 
             try {
-                // عرض رسالة تحميل
-                const submitButton = document.getElementById("submit-btn");
-                submitButton.disabled = true;
-                submitButton.innerText = "⏳ جاري الرفع...";
+                document.getElementById("submit-btn").disabled = true;
+                document.getElementById("submit-btn").innerText = "⏳ جاري الرفع...";
+                progressBarContainer.style.display = "block";
+                progressBar.style.width = "0%";
 
-                // رفع الملف إلى Firebase Storage
                 const storageRef = ref(storage, `clients/${Date.now()}_${clientDoc.name}`);
-                const uploadTask = await uploadBytes(storageRef, clientDoc);
-                const fileUrl = await getDownloadURL(uploadTask.ref);
+                const uploadTask = uploadBytesResumable(storageRef, clientDoc);
 
-                // حفظ بيانات العميل في Firestore
-                await addDoc(collection(db, "clients"), {
-                    name: clientName,
-                    fileUrl: fileUrl,
-                    timestamp: new Date()
-                });
+                uploadTask.on(
+                    "state_changed",
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        progressBar.style.width = progress + "%";
+                        progressBar.innerText = Math.round(progress) + "%";
+                    },
+                    (error) => {
+                        console.error("❌ خطأ أثناء رفع الملف:", error);
+                        alert("❌ فشل في رفع الملف.");
+                    },
+                    async () => {
+                        const fileUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                        await addDoc(collection(db, "clients"), {
+                            name: clientName,
+                            fileUrl: fileUrl,
+                            timestamp: new Date()
+                        });
 
-                alert("✅ تم إضافة العميل بنجاح!");
-                submitButton.disabled = false;
-                submitButton.innerText = "➕ إضافة العميل";
-                document.getElementById("add-client-form").reset();
-                loadClients(); // إعادة تحميل القائمة
+                        alert("✅ تم إضافة العميل بنجاح!");
+                        document.getElementById("submit-btn").disabled = false;
+                        document.getElementById("submit-btn").innerText = "➕ إضافة العميل";
+                        document.getElementById("add-client-form").reset();
+                        progressBarContainer.style.display = "none";
+                        loadClients();
+                    }
+                );
             } catch (error) {
                 console.error("❌ حدث خطأ أثناء الإضافة:", error);
-                alert("❌ فشل في رفع الملف، حاول مرة أخرى.");
+                alert("❌ فشل في العملية، حاول مرة أخرى.");
             }
         }
 
@@ -106,6 +135,11 @@
             <input type="file" id="client-doc" accept=".pdf, .doc, .docx" required>
             <button id="submit-btn" type="submit">➕ إضافة العميل</button>
         </form>
+
+        <div id="progress-container">
+            <div id="progress-bar">0%</div>
+        </div>
+
         <ul id="clients-list"></ul>
         <button onclick="window.location.href='admin_dashboard.html'">🔙 العودة</button>
     </div>
