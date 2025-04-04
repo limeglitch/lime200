@@ -2,157 +2,109 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>📋 إدارة مصاريف المحامين</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <title>💼 إدارة مصاريف المحامين</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      background: linear-gradient(to right, #141e30, #243b55);
+      background: #121212;
       color: white;
       font-family: Arial, sans-serif;
+      padding: 20px;
       text-align: center;
-      padding: 30px;
     }
-    .expense-box {
-      background: rgba(255, 255, 255, 0.1);
+
+    h2 {
+      color: #00ff99;
+    }
+
+    .expense-card {
+      background: #1e1e1e;
+      margin: 10px auto;
       padding: 15px;
-      margin: 15px auto;
-      border-radius: 10px;
       width: 90%;
-      max-width: 500px;
+      border-left: 5px solid #00ff99;
       text-align: right;
-      position: relative;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-      transition: 0.3s;
     }
-    .expense-box:hover {
-      transform: scale(1.05);
-    }
-    .total {
-      color: #00ffcc;
-      font-size: 22px;
-      margin-top: 20px;
-    }
-    button {
-      background: #00cc88;
+
+    #logout-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: crimson;
       color: white;
-      padding: 12px 20px;
-      border: none;
-      margin: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #008060;
-    }
-    .delete-btn {
-      background: crimson;
-    }
-    .delete-btn:hover {
-      background: darkred;
     }
   </style>
 </head>
 <body>
 
   <h2>📋 إدارة مصاريف المحامين</h2>
+  <h3>عرض المصاريف لجميع المحامين</h3>
 
-  <!-- نموذج إضافة مصروف -->
-  <div>
-    <h3>إضافة مصروف جديد</h3>
-    <input type="text" id="username" placeholder="اسم المحامي" required><br><br>
-    <input type="number" id="amount" placeholder="المبلغ" required><br><br>
-    <input type="text" id="note" placeholder="ملاحظة" required><br><br>
-    <button onclick="addExpense()">إضافة مصروف</button>
-  </div>
+  <div id="expenses-list"></div>
 
-  <br>
-  <button class="delete-btn" onclick="deleteAllExpenses()">🗑️ حذف جميع المصاريف</button>
+  <button id="logout-btn">🚪 تسجيل الخروج</button>
 
-  <div id="expenses-container"></div>
-  <div class="total" id="total-expenses">💰 إجمالي المصاريف: 0 جنيه</div>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js"></script>
 
   <script>
     // إعداد Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og", // استبدل بالقيم الحقيقية
+      apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
       authDomain: "lime-4c195.firebaseapp.com",
       projectId: "lime-4c195",
-      storageBucket: "lime-4c195.appspot.com",
+      storageBucket: "lime-4c195.firebasestorage.app",
       messagingSenderId: "253428642396",
-      appId: "1:253428642396:web:e0136755418eaf6534ac99"
+      appId: "1:253428642396:web:e0136755418eaf6534ac99",
+      measurementId: "G-VV32PRPQGX"
     };
-    
-    // تشغيل Firebase
-    firebase.initializeApp(firebaseConfig);
+
+    const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const container = document.getElementById("expenses-container");
 
-    // استماع للتغيرات في Firestore
-    db.collection("lawyersExpenses").onSnapshot((snapshot) => {
-      container.innerHTML = '';  // مسح المحتوى السابق
-      let total = 0;
+    // التحقق إذا كنت مديرًا
+    const currentUser = localStorage.getItem("currentUser");
 
-      snapshot.forEach((doc) => {
-        let data = doc.data();
-        total += parseFloat(data.amount);
+    if (currentUser !== "admin") {
+      window.location.href = "login.html";
+    }
 
-        let div = document.createElement("div");
-        div.className = "expense-box";
-        div.innerHTML = `
-          👤 <strong>${data.username}</strong><br>
-          💰 <strong>${data.amount} جنيه</strong><br>
-          🧾 ${data.note || "لا توجد ملاحظات"}<br>
-          🗓️ ${data.date}
-        `;
-        container.appendChild(div);
+    // دالة لعرض المصاريف لجميع المحامين
+    function renderExpenses() {
+      db.collection("expenses").get().then(querySnapshot => {
+        const list = document.getElementById("expenses-list");
+        let total = 0;
+
+        querySnapshot.forEach(doc => {
+          const username = doc.id;
+          const data = doc.data();
+          const expenses = data.expenses || [];
+
+          expenses.forEach(expense => {
+            total += parseFloat(expense.amount);
+            list.innerHTML += `
+              <div class="expense-card">
+                <strong>${username}</strong> - 💰 ${expense.title}: ${expense.amount} جنيه<br>
+                📝 ${expense.note || "لا توجد ملاحظات"}<br>
+                📅 ${expense.date}
+              </div>
+            `;
+          });
+        });
+
+        list.innerHTML += `<div style="margin-top:15px"><strong>✅ الإجمالي: ${total} جنيه</strong></div>`;
       });
+    }
 
-      document.getElementById("total-expenses").innerText = `💰 إجمالي المصاريف: ${total} جنيه`;
+    // تسجيل الخروج
+    document.getElementById("logout-btn").addEventListener("click", function () {
+      localStorage.removeItem("currentUser");
+      window.location.href = "login.html";
     });
 
-    // دالة لإضافة مصروف جديد
-    function addExpense() {
-      const username = document.getElementById("username").value;
-      const amount = document.getElementById("amount").value;
-      const note = document.getElementById("note").value;
-      const date = new Date().toISOString().split('T')[0]; // تاريخ اليوم
-
-      if (username && amount && note) {
-        db.collection("lawyersExpenses").add({
-          username,
-          amount,
-          note,
-          date
-        }).then(() => {
-          alert("✅ تم إضافة المصروف بنجاح!");
-          document.getElementById("username").value = '';
-          document.getElementById("amount").value = '';
-          document.getElementById("note").value = '';
-        }).catch(error => {
-          console.error("❌ خطأ في الإضافة: ", error);
-        });
-      } else {
-        alert("⚠️ من فضلك قم بملء جميع الحقول.");
-      }
-    }
-
-    // دالة لحذف جميع المصاريف
-    function deleteAllExpenses() {
-      if (confirm("⚠️ هل أنت متأكد من حذف جميع المصاريف؟")) {
-        db.collection("lawyersExpenses").get().then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            db.collection("lawyersExpenses").doc(doc.id).delete();
-          });
-        }).then(() => {
-          alert("🗑️ تم حذف جميع المصاريف!");
-        }).catch(error => {
-          console.error("❌ خطأ أثناء الحذف: ", error);
-        });
-      }
-    }
+    // استدعاء الدالة لعرض المصاريف
+    renderExpenses();
   </script>
 
 </body>
