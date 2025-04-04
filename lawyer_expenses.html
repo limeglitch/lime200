@@ -2,8 +2,14 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>💼 مصاريف المحامي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💼 مصاريف المحامي</title>
+
+  <!-- Firebase SDK 8.x (النسخة التي تعمل بدون ES Modules) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
   <style>
     body {
       background: #121212;
@@ -12,18 +18,15 @@
       padding: 20px;
       text-align: center;
     }
-
     h2 {
       color: #00ff99;
     }
-
     form {
       background: #1e1e1e;
       padding: 20px;
       border-radius: 8px;
       margin-bottom: 30px;
     }
-
     input, textarea {
       width: 90%;
       padding: 10px;
@@ -34,7 +37,6 @@
       font-size: 16px;
       border-radius: 5px;
     }
-
     button {
       background: #00ff99;
       color: #000;
@@ -44,11 +46,9 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
     button:hover {
       background: #00cc77;
     }
-
     .expense-card {
       background: #1e1e1e;
       margin: 10px auto;
@@ -57,7 +57,6 @@
       border-left: 5px solid #00ff99;
       text-align: right;
     }
-
     #logout-btn {
       position: fixed;
       top: 20px;
@@ -86,83 +85,87 @@
   <button id="logout-btn">🚪 تسجيل الخروج</button>
 
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js"></script>
-
   <script>
     // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
       authDomain: "lime-4c195.firebaseapp.com",
       projectId: "lime-4c195",
-      storageBucket: "lime-4c195.firebasestorage.app",
+      storageBucket: "lime-4c195.appspot.com",
       messagingSenderId: "253428642396",
       appId: "1:253428642396:web:e0136755418eaf6534ac99",
       measurementId: "G-VV32PRPQGX"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
+    // تهيئة Firebase
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const username = localStorage.getItem("currentUser");
+    // التحقق من وجود مستخدم مسجل الدخول
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (!user) {
+        // إذا لم يكن هناك مستخدم مسجل الدخول، إعادة التوجيه إلى صفحة تسجيل الدخول
+        window.location.href = "login.html";
+      } else {
+        // إذا كان هناك مستخدم مسجل الدخول، إظهار البيانات
+        const username = user.email;  // يمكن استخدام البريد الإلكتروني كاسم للمستخدم
 
-    if (!username || username === "admin") {
-      window.location.href = "login.html";
-    }
+        // مرجع للمستند في Firestore بناءً على اسم المستخدم
+        const userExpenseRef = db.collection("expenses").doc(username);
 
-    const userExpenseRef = db.collection("expenses").doc(username);
+        // دالة لعرض المصاريف
+        function renderExpenses() {
+          userExpenseRef.get().then(doc => {
+            const data = doc.exists ? doc.data().expenses : [];
+            const list = document.getElementById("expenses-list");
 
-    function renderExpenses() {
-      userExpenseRef.get().then(doc => {
-        const data = doc.exists ? doc.data().expenses : [];
-        const list = document.getElementById("expenses-list");
+            let total = 0;
+            list.innerHTML = data.map(item => {
+              total += parseFloat(item.amount);
+              return `<div class="expense-card">
+                💰 <strong>${item.title}</strong>: ${item.amount} جنيه<br>
+                📝 ${item.note || "لا توجد ملاحظات"}<br>
+                📅 ${item.date}
+              </div>`;
+            }).join("");
 
-        let total = 0;
-        list.innerHTML = data.map(item => {
-          total += parseFloat(item.amount);
-          return `<div class="expense-card">
-            💰 <strong>${item.title}</strong>: ${item.amount} جنيه<br>
-            📝 ${item.note || "لا توجد ملاحظات"}<br>
-            📅 ${item.date}
-          </div>`;
-        }).join("");
+            list.innerHTML += `<div style="margin-top:15px"><strong>✅ الإجمالي: ${total} جنيه</strong></div>`;
+          });
+        }
 
-        list.innerHTML += `<div style="margin-top:15px"><strong>✅ الإجمالي: ${total} جنيه</strong></div>`;
+        // إضافة مصروف جديد
+        document.getElementById("expense-form").addEventListener("submit", function (e) {
+          e.preventDefault();
 
-        // Display the remaining balance
-        const balance = parseFloat(localStorage.getItem(`balance_${username}`)) || 0;
-        const remaining = balance - total;
+          const title = document.getElementById("expense-title").value;
+          const amount = document.getElementById("expense-amount").value;
+          const note = document.getElementById("expense-note").value;
+          const date = new Date().toLocaleString();
 
-        document.getElementById("user-balance-display").textContent =
-          `💰 رصيدك المتبقي: ${remaining} جنيه (من إجمالي: ${balance})`;
-      });
-    }
+          const expense = { title, amount, note, date };
 
-    document.getElementById("expense-form").addEventListener("submit", function (e) {
-      e.preventDefault();
+          // تحديث المستند في Firestore
+          userExpenseRef.set({
+            expenses: firebase.firestore.FieldValue.arrayUnion(expense)
+          }, { merge: true }).then(() => {
+            this.reset();
+            renderExpenses();
+          }).catch((error) => {
+            console.error("Error adding expense: ", error);
+          });
+        });
 
-      const title = document.getElementById("expense-title").value;
-      const amount = document.getElementById("expense-amount").value;
-      const note = document.getElementById("expense-note").value;
-      const date = new Date().toLocaleString();
+        // دالة لتسجيل الخروج
+        document.getElementById("logout-btn").addEventListener("click", function () {
+          firebase.auth().signOut().then(() => {
+            window.location.href = "login.html";
+          });
+        });
 
-      const expense = { title, amount, note, date };
-
-      // إضافة المصاريف في قاعدة البيانات الخاصة بالمحامي
-      userExpenseRef.update({
-        expenses: firebase.firestore.FieldValue.arrayUnion(expense)
-      }).then(() => {
-        this.reset();
+        // عرض المصاريف عند تحميل الصفحة
         renderExpenses();
-      });
+      }
     });
-
-    document.getElementById("logout-btn").addEventListener("click", function () {
-      localStorage.removeItem("currentUser");
-      window.location.href = "login.html";
-    });
-
-    renderExpenses();
   </script>
 
 </body>
