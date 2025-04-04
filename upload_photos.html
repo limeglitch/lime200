@@ -172,7 +172,9 @@
                 const progress = Math.round(m.progress * 100);
                 progressBar.style.width = progress + "%";
               }
-            }
+            },
+            // يمكنك تغيير المعاملات لتسريع المعالجة أو تخصيص اللغة (إزالة الـ eng إذا لم تكن بحاجة لها)
+            lang: 'ara'
           }
         ).then(({ data: { text } }) => {
           clearInterval(intervalId);
