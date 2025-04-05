@@ -42,6 +42,21 @@
     #custom-buttons {
       margin-top: 20px;
     }
+
+    .small-button {
+      padding: 8px 12px;
+      font-size: 14px;
+      background-color: #00cc88;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+
+    .small-button:hover {
+      background-color: #33cc99;
+    }
   </style>
 </head>
 <body>
@@ -60,6 +75,9 @@
     <button onclick="window.location.href='add_balance.html'" style="background-color: #00cc88; padding: 10px 20px; border: none; border-radius: 5px; margin: 10px; cursor: pointer;">
       💰 إضافة رصيد لمحامي
     </button>
+
+    <!-- زر الشات الجديد مع رابط مباشر -->
+    <button class="small-button" onclick="window.location.href='https://chategypt525.chatovod.com/'">💬 شات</button>
 
     <button id="logout-btn">🚪 تسجيل الخروج</button>
   </div>
