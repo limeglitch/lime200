@@ -3,119 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تحويل صورة إلى نص - سريع</title>
+  <title>OCR عربي</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.4/dist/tesseract.min.js"></script>
   <style>
-    body {
-      background-color: #121212;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 30px;
-    }
-    textarea {
-      width: 90%;
-      height: 200px;
-      background: #fff;
-      color: #000;
-      padding: 10px;
-      margin-top: 20px;
-      font-size: 16px;
-    }
-    #progressBarContainer {
-      width: 80%;
-      height: 20px;
-      background-color: #444;
-      border-radius: 10px;
-      margin: 20px auto;
-      display: none;
-      overflow: hidden;
-    }
-    #progressBar {
-      height: 100%;
-      width: 0%;
-      background-color: #00ff99;
-      transition: width 0.3s;
-    }
+    body { background: #111; color: #fff; text-align: center; font-family: sans-serif; padding: 20px; }
+    textarea { width: 90%; height: 200px; margin-top: 20px; font-size: 16px; padding: 10px; }
+    #progressBarContainer { width: 80%; height: 20px; background: #444; margin: 20px auto; display: none; border-radius: 10px; }
+    #progressBar { height: 100%; width: 0%; background: #0f6; border-radius: 10px; transition: width 0.4s; }
   </style>
 </head>
 <body>
 
-  <h2>🖼️ تحويل صورة إلى نص (سريع)</h2>
+  <h2>🖼️ OCR عربي سريع</h2>
 
   <input type="file" id="imageInput" accept="image/*"><br><br>
-  <button onclick="startOCR()" style="padding:10px 20px;">🔄 تحويل</button>
-  <div id="progressBarContainer">
-    <div id="progressBar"></div>
-  </div>
-  <p id="status">في انتظار الصورة...</p>
-  <textarea id="outputText" placeholder="النص المستخرج سيظهر هنا..."></textarea>
+  <button onclick="runOCR()">ابدأ التحويل</button>
+  <div id="progressBarContainer"><div id="progressBar"></div></div>
+  <p id="status">منتظر صورة...</p>
+  <textarea id="outputText" placeholder="النص هنا..."></textarea>
 
   <script>
-    async function startOCR() {
-      const fileInput = document.getElementById("imageInput");
+    function runOCR() {
+      const input = document.getElementById("imageInput");
       const output = document.getElementById("outputText");
       const status = document.getElementById("status");
-      const progressBarContainer = document.getElementById("progressBarContainer");
       const progressBar = document.getElementById("progressBar");
+      const progressContainer = document.getElementById("progressBarContainer");
 
-      if (!fileInput.files.length) {
-        alert("اختر صورة أولاً");
-        return;
-      }
+      if (!input.files.length) return alert("اختر صورة");
 
-      const file = fileInput.files[0];
-      status.textContent = "⏳ جاري التصغير والمعالجة...";
-      progressBarContainer.style.display = "block";
-      progressBar.style.width = "0%";
+      const file = input.files[0];
+      const reader = new FileReader();
 
-      const resizedImage = await resizeImage(file, 800);
+      reader.onload = function () {
+        progressContainer.style.display = "block";
+        progressBar.style.width = "0%";
+        status.textContent = "⏳ جاري المعالجة...";
 
-      Tesseract.recognize(
-        resizedImage,
-        'ara',
-        {
+        Tesseract.recognize(reader.result, 'ara', {
           logger: m => {
             if (m.status === "recognizing text") {
-              const progress = Math.round(m.progress * 100);
-              progressBar.style.width = progress + "%";
-              status.textContent = `⏳ جاري المعالجة (${progress}%)`;
+              progressBar.style.width = Math.round(m.progress * 100) + "%";
+              status.textContent = `جاري المعالجة (${Math.round(m.progress * 100)}%)`;
             }
           }
-        }
-      ).then(({ data: { text } }) => {
-        progressBar.style.width = "100%";
-        status.textContent = "✅ تم الاستخراج";
-        output.value = text.trim() || "❌ مفيش نص واضح.";
-      }).catch(err => {
-        console.error(err);
-        progressBarContainer.style.display = "none";
-        status.textContent = "❌ حصل خطأ أثناء المعالجة";
-        output.value = "";
-      });
-    }
+        }).then(({ data: { text } }) => {
+          progressBar.style.width = "100%";
+          status.textContent = "✅ تم التحويل";
+          output.value = text.trim() || "❌ لا يوجد نص واضح.";
+        }).catch(err => {
+          console.error(err);
+          status.textContent = "❌ حصل خطأ أثناء المعالجة";
+          output.value = "";
+        });
+      };
 
-    function resizeImage(file, maxWidth = 800) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        const reader = new FileReader();
-
-        reader.onload = e => img.src = e.target.result;
-        reader.onerror = reject;
-
-        img.onload = () => {
-          const scale = maxWidth / img.width;
-          const canvas = document.createElement("canvas");
-          canvas.width = maxWidth;
-          canvas.height = img.height * scale;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob(blob => resolve(blob), "image/jpeg", 0.7);
-        };
-
-        reader.readAsDataURL(file);
-      });
+      reader.readAsDataURL(file);
     }
   </script>
+
 </body>
 </html>
