@@ -3,92 +3,123 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لوحة تحكم الأدمن</title>
+  <title>لوحة تحكم إداريين مكتب محمد منطاوي</title>
   <style>
     body {
-      background-color: #000;
-      color: white;
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      color: #ecf0f1;
       text-align: center;
-      padding: 30px;
+      padding: 50px 0;
+      height: 100vh;
+      margin: 0;
     }
 
     .dashboard-container {
-      max-width: 500px;
-      margin: auto;
+      max-width: 650px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     }
 
     h2 {
-      color: #00ffc8;
-      margin-bottom: 30px;
+      font-size: 30px;
+      margin-bottom: 20px;
+      color: #ff6f61;
+      animation: fadeIn 1.5s ease-in-out;
     }
 
-    button {
-      background-color: #1e1e1e;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      margin: 10px 5px;
-      border-radius: 6px;
+    .button {
+      display: block;
+      width: 100%;
+      background-color: rgba(0, 255, 200, 0.2);
+      border: 1px solid #ff6f61;
+      color: #ffffff;
+      font-size: 17px;
+      padding: 14px;
+      margin: 12px 0;
+      border-radius: 12px;
       cursor: pointer;
-      font-size: 16px;
-      transition: background 0.3s;
+      transition: all 0.3s ease;
     }
 
-    button:hover {
-      background-color: #333;
-    }
-
-    #custom-buttons {
-      margin-top: 20px;
+    .button:hover {
+      background-color: #ff6f61;
+      color: #000;
+      transform: scale(1.05);
     }
 
     .small-button {
-      padding: 8px 12px;
-      font-size: 14px;
-      background-color: #00cc88;
-      color: white;
-      border-radius: 6px;
+      display: block;
+      width: 100%;
+      background-color: rgba(0, 255, 200, 0.2);
+      border: 1px solid #ff6f61;
+      color: #ffffff;
+      font-size: 17px;
+      padding: 14px;
+      margin: 12px 0;
+      border-radius: 12px;
       cursor: pointer;
-      margin-top: 10px;
-      transition: background 0.3s;
+      transition: all 0.3s ease;
     }
 
     .small-button:hover {
-      background-color: #33cc99;
+      background-color: #ff6f61;
+      color: #000;
+      transform: scale(1.05);
+    }
+
+    .developer-tag {
+      font-size: 14px;
+      color: #ffffff;
+      margin-top: 40px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    .page-title {
+      font-size: 20px;
+      color: #ffffff;
+      margin-top: 20px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
     }
   </style>
 </head>
 <body>
   <div class="dashboard-container">
-    <h2>🔧 لوحة تحكم الأدمن</h2>
+    <h2>🔧 لوحة تحكم إداريين مكتب محمد منطاوي</h2>
+    <div class="page-title">📋 التحكم الكامل في النظام</div>
+    
+    <button class="button" onclick="window.location.href='add_user.html'">➕ إنشاء حساب جديد</button>
+    <button class="button" onclick="window.location.href='view_users.html'">👤 عرض الحسابات</button>
+    <button class="button" onclick="window.location.href='admin_expenses.html'">💼 إدارة المصاريف</button>
+    <button class="button" onclick="window.location.href='clients.html'">📁 إدارة العملاء</button>
 
-    <button onclick="window.location.href='add_user.html'">➕ إنشاء حساب جديد</button>
-    <button onclick="window.location.href='view_users.html'">👤 عرض الحسابات</button>
-    <button onclick="window.location.href='admin_expenses.html'">💼 إدارة المصاريف</button>
-    <button onclick="window.location.href='clients.html'">📁 إدارة العملاء</button>
+    <button class="button" onclick="window.location.href='add_balance.html'">💰 إضافة رصيد لمحامي</button>
 
-    <button id="add-button-btn">➕ إضافة زر جديد</button>
-    <div id="custom-buttons"></div>
+    <!-- زر الشات بنفس التنسيق مع الأزرار الأخرى -->
+    <button class="button small-button" onclick="window.location.href='https://chategypt525.chatovod.com/'">💬 شات</button>
 
-    <!-- زر إضافة رصيد لمحامي -->
-    <button onclick="window.location.href='add_balance.html'" style="background-color: #00cc88; padding: 10px 20px; border: none; border-radius: 5px; margin: 10px; cursor: pointer;">
-      💰 إضافة رصيد لمحامي
-    </button>
+    <button class="button" id="logout-btn">🚪 تسجيل الخروج</button>
 
-    <!-- زر الشات الجديد مع رابط مباشر -->
-    <button class="small-button" onclick="window.location.href='https://chategypt525.chatovod.com/'">💬 شات</button>
-
-    <button id="logout-btn">🚪 تسجيل الخروج</button>
+    <div class="developer-tag">🧠 لايم جليتش - مطور</div>
   </div>
 
-  <!-- تحميل Firebase 9+ كـ ES Modules -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
     import { getAuth } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
     import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
-    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDikvQqTbn8x2Yd2FiyzrMOVO7dO-r-3og",
       authDomain: "lime-4c195.firebaseapp.com",
@@ -99,27 +130,17 @@
       measurementId: "G-VV32PRPQGX"
     };
 
-    // تهيئة Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // دالة لتسجيل الخروج
-    document.getElementById('logout-btn').addEventListener('click', function () {
+    document.getElementById('logout-btn').addEventListener('click', () => {
       auth.signOut().then(() => {
         alert('تم تسجيل الخروج بنجاح');
-        window.location.href = 'login.html'; // قم بتوجيهه إلى صفحة الدخول
+        window.location.href = 'login.html';
       }).catch((error) => {
         alert('حدث خطأ أثناء تسجيل الخروج: ' + error.message);
       });
-    });
-
-    // دالة لإضافة زر مخصص
-    document.getElementById('add-button-btn').addEventListener('click', function () {
-      const newButton = document.createElement('button');
-      newButton.textContent = 'زر مخصص';
-      newButton.style.backgroundColor = '#ff66cc';
-      document.getElementById('custom-buttons').appendChild(newButton);
     });
   </script>
 
