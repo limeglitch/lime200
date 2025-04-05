@@ -6,64 +6,127 @@
   <title>لوحة المحامي</title>
   <style>
     body {
-      background-color: #121212;
+      background-color: #121212; /* اللون الداكن خلفية */
       color: white;
       font-family: Arial, sans-serif;
       text-align: center;
+      margin: 0;
+      padding: 0;
     }
 
     .dashboard-container {
       margin-top: 50px;
+      padding: 30px;
+      background-color: rgba(0, 0, 0, 0.8); /* خلفية شبه شفافة */
+      border-radius: 15px;
+      max-width: 800px;
+      margin: 0 auto;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
     }
 
-    h2 {
+    h2, h3 {
       color: #00ff99;
       margin-bottom: 10px;
     }
 
-    #welcome-msg {
+    h3 {
       font-size: 20px;
-      margin-bottom: 30px;
       color: #ffcc00;
     }
 
-    button {
-      background-color: #00ff99;
-      color: black;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      margin: 10px 10px;
-      cursor: pointer;
+    #logo {
+      width: 150px;
+      margin-bottom: 20px;
+    }
+
+    #developer-info {
+      color: #00ff99;
+      font-size: 14px;
+      margin-top: 40px;
+    }
+
+    #header {
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      color: white;
+      font-size: 24px;
       font-weight: bold;
     }
 
+    button {
+      background: rgba(0, 255, 99, 0.5);
+      color: black;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      margin: 10px 0;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      width: 100%;
+      backdrop-filter: blur(5px);
+      border: 2px solid #00ff99;
+    }
+
     button:hover {
-      background-color: #00cc77;
+      background-color: rgba(0, 255, 99, 0.7);
+      transform: scale(1.05);
+      color: #fff;
     }
 
     #logout-btn {
       background-color: crimson;
       color: white;
+      width: 60%;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    #logout-btn:hover {
+      background-color: #ff6666;
+      transform: scale(1.05);
+    }
+
+    .chat-button {
+      background-color: rgba(0, 204, 136, 0.2);
+      color: black;
+      border: 1px solid #33cc99;
+    }
+
+    .chat-button:hover {
+      background-color: #33cc99;
+      color: white;
+    }
+
+    /* إضافة تأثيرات على الأزرار */
+    button:active {
+      transform: scale(0.98);
     }
   </style>
 </head>
 <body>
 
+  <div id="header">⚖️ مكتب محمد منطاوي - لوحة تحكم المحامي</div>
+
   <div class="dashboard-container">
-    <h2>⚖️ لوحة تحكم المحامي</h2>
+    <img id="logo" src="https://i.postimg.cc/Pr9mMpLN/Whats-App-Image-2025-04-05-at-15-20-35-8af51fc8.jpg" alt="Logo">
+    <h2>لوحة تحكم المحامي</h2>
     <h3 id="welcome-msg">👋 جاري التحميل...</h3>
 
     <button onclick="window.location.href='add_case.html'">➕ إضافة قضية جديدة</button>
     <button onclick="window.location.href='track_case.html'">🔍 متابعة القضايا القديمة</button>
     <button onclick="window.location.href='word_editor.html'">📝 محرر Word</button>
     <button onclick="window.location.href='upload_photos.html'">📸 تصوير ورفع أوراق</button>
-<button class="small-button" onclick="window.location.href='https://chategypt525.chatovod.com/'">💬 شات</button>
-    
+    <button class="chat-button" onclick="window.location.href='https://chategypt525.chatovod.com/'">💬 شات</button>
     <button onclick="window.location.href='lawyer_expenses.html'">💵 إدارة المصاريف</button>
 
     <div style="margin-top: 40px;">
       <button id="logout-btn">🚪 تسجيل الخروج</button>
+    </div>
+    
+    <div id="developer-info">
+      🧠 مطور: لايم جليتش
     </div>
   </div>
 
